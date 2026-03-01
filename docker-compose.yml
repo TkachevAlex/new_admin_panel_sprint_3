@@ -2,7 +2,8 @@ services:
   db:
     image: postgres:16
     volumes:
-      - /home/admin/postgresql/data:/var/lib/postgresql/data
+      - ./postgres_data:/var/lib/postgresql/data
+      - ./movies_dump.sql:/docker-entrypoint-initdb.d/dump.sql:ro
     env_file:
       - .env
     ports:
@@ -25,5 +26,23 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9200"]
       interval: 10s
-      timeout: 5s
-      retries: 5
+      timeout: 10s
+      retries: 10
+
+  etl:
+    build: .
+    volumes:
+      - ./state.json:/app/state.json
+    env_file:
+      - .env
+    environment:
+      - DB_HOST=db
+      - ELASTIC_HOST=es
+    depends_on:
+      db:
+        condition: service_healthy
+      es:
+        condition: service_healthy
+    command: >
+      sh -c "python -m etl.create_index && python -m etl.main"
+    restart: always
