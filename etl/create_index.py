@@ -1,11 +1,12 @@
 import json
 import requests
 import logging
+from .config import settings
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ES_URL = "http://127.0.0.1:9200/movies"
+ES_URL = f"http://{settings.elastic_host}:{settings.elastic_port}/movies"dв
 
 
 def create_index():
